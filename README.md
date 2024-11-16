@@ -130,14 +130,4 @@ You can also control the DPM8650 via a built-in web tool:
   `dpm8650_controller/binary_sensor/cccv_output_state/state`
 
 ---
-
-## Useful Tips
-
-- Ensure that your DPM8650 device is set to the correct RS485 mode and baud rate as described.
-- Double-check wiring, especially the TX and RX connections, to prevent communication issues.
-- You can adjust the ESPHome YAML configuration to include only the necessary interfaces (API, MQTT, or Web).
-- For Node-RED users, make sure your MQTT broker is configured correctly to receive and send commands.
-
----
-
 Feel free to raise an issue on GitHub if you encounter any problems or have suggestions for improvements.
