@@ -28,7 +28,7 @@ Ensure the TX and RX pins are connected as described:
 For detailed ESPHome configuration, refer to the [DPM8650 Controller YAML](./dpm8650_controller.YAML).
 
 
-## Software Configuration
+## DPM8650 Configuration
 
 To set up your Juntek DPM8650, follow these steps:
 
