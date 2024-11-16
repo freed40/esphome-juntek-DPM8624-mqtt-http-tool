@@ -1,9 +1,31 @@
 # esphome-juntek-DPM8650-mqtt-http-tool
- Control your JUNTEK 50A Buck converter using its RS585 interface. Homeasistant/NodeRed/Web Control  ESPHome YAML Config
+ Control your JUNTEK 50A Buck converter using its RS485 interface. Homeasistant/NodeRed/Web Control  ESPHome YAML Config
 
 # Hardware Setup:
 
-![Screenshot 2024-11-16 133450](https://github.com/user-attachments/assets/4ec21d7a-58c2-4e0e-ba94-ae161a18d58e)
+![Hardware Setup](https://github.com/user-attachments/assets/4ec21d7a-58c2-4e0e-ba94-ae161a18d58e)
+
+
+# Software Setup:
+Long-press SET button on inverter and make sure that:
+
+Inverter setup:
+5-CS is set to __1_ (sets the inverter to RS485 modbus)
+6-bd is set to 115.2 (sets the baudrate to 115200)
+
+Make sure the TX pin defined in YAML is connected to TX pin of the TTL to RS485 board, same for the RX pin. 
+
+![Screenshot 2024-11-16 135135](https://github.com/user-attachments/assets/69c65894-d617-401c-880f-108f57721033)
+
+
+## Interface: 
+1) If you use Homeassistant keep the api: block
+
+
+2) if you use MQTT/NodeRed keep the mqtt: block
+
+
+3)  If you just need the web interface keep the webserver: block
 
 
 # Home Assistant Screen Shot:
