@@ -133,7 +133,10 @@ You can also control the DPM8650 via a built-in web tool:
 ## Resources
 
 [Library](https://github.com/Lotiq/DPM8600).
+
 [Manual](./JT-DPM8600-Manual_2024-05-24.pdf).
+
 [Modbus Protocol](./JT-DPM86XX_Communication_protocol_2023-01-05.pdf).
+
 
 
