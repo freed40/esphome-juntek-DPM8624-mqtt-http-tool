@@ -22,6 +22,10 @@ Make sure the TX pin defined in YAML is connected to TX pin of the TTL to RS485 
 
 <img width="314" alt="Screenshot 2024-11-16 135528" src="https://github.com/user-attachments/assets/d9023c15-6558-4439-a2d4-f81ea47c9c6a">
 
+see dpm8650_controller.YAML
+
+
+
 ## Interface: 
 1) If you use Homeassistant keep the api: block
 
