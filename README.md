@@ -10,8 +10,9 @@
 Long-press SET button the DPM8650 and make sure that:
 
 Inverter setup:
-5-CS is set to __1_ (sets the inverter to RS485 modbus)
-6-bd is set to 115.2 (sets the baudrate to 115200)
+"5-CS" is set to "__1_"  (sets the inverter to RS485 modbus)
+
+"6-bd" is set to "115.2"  (sets the baudrate to 115200)
 
 Make sure the TX pin defined in YAML is connected to TX pin of the TTL to RS485 board, same for the RX pin. 
 
