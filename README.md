@@ -3,6 +3,7 @@
 
 # Hardware Setup:
 
+![Screenshot 2024-11-16 133450](https://github.com/user-attachments/assets/4ec21d7a-58c2-4e0e-ba94-ae161a18d58e)
 
 
 # Home Assistant Screen Shot:
