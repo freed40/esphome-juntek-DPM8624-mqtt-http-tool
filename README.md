@@ -48,7 +48,7 @@ To set up your Juntek DPM8650, follow these steps:
 
 ## Interface Options
 
-Depending on your use case, you can enable different interfaces in the ESPHome YAML configuration:
+Depending on your use case, you can enable different interfaces in the [DPM8650 Controller YAML](./dpm8650_controller.YAML).
 
 1. **Home Assistant API**:
    - Keep the `api:` block if you're using Home Assistant integration.
@@ -58,6 +58,8 @@ Depending on your use case, you can enable different interfaces in the ESPHome Y
 
 3. **Web Interface**:
    - Use the `web_server:` block if you prefer controlling the DPM8650 via a simple web interface.
+  
+
 
 ---
 
