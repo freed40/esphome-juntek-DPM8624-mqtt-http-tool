@@ -1,6 +1,6 @@
 # ESPHome Juntek DPM8650 MQTT & HTTP Tool
 
-Control your **[Juntek DPM8650 50A Buck Converter](./JT-DPM8650_Datasheet-EN_2024-02-14.pdf)** using its RS485 Modbus interface. This setup integrates seamlessly with **Home Assistant**, **Node-RED**, or a simple web control interface using ESPHome YAML configuration.
+Control your **[Juntek DPM8650 50A Buck Converter](./JT-DPM8650_Datasheet-EN_2024-02-14.pdf)** using its RS485 Modbus interface. This setup integrates seamlessly with **Home Assistant**, **Node-RED**, or a simple web control interface using [ESPHome YAML configuration](./dpm8650_controller.YAML)
 
 ---
 
