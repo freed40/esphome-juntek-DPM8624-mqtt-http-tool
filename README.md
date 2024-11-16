@@ -6,10 +6,6 @@ Control your **Juntek DPM8650 50A Buck Converter** using its RS485 interface. Th
 
 ## Hardware Setup
 
-Wiring for the ESP32 to RS485 connection:
-
-- **TX Pin (ESP)** → **TX Pin (TTL to RS485 Board)**
-- **RX Pin (ESP)** → **RX Pin (TTL to RS485 Board)**
 
 ### Hardware Diagram
 
@@ -33,6 +29,12 @@ To set up your Juntek DPM8650, follow these steps:
      ![Baud Rate Setting](https://github.com/user-attachments/assets/c1d746ba-8af8-44a6-983a-bae01121d99c)
 
 ### Wiring Diagram
+
+
+Wiring for the ESP32 to RS485 connection:
+
+- **TX Pin (ESP)** → **TX Pin (TTL to RS485 Board)**
+- **RX Pin (ESP)** → **RX Pin (TTL to RS485 Board)**
 
 Ensure the TX and RX pins are connected as described:
 
