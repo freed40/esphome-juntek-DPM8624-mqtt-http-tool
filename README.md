@@ -7,7 +7,7 @@
 
 
 # Software Setup:
-Long-press SET button on inverter and make sure that:
+Long-press SET button the DPM8650 and make sure that:
 
 Inverter setup:
 5-CS is set to __1_ (sets the inverter to RS485 modbus)
