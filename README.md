@@ -15,10 +15,7 @@ Inverter setup:
 
 Make sure the TX pin defined in YAML is connected to TX pin of the TTL to RS485 board, same for the RX pin. 
 
-
-<img width="339" alt="Screenshot 2024-11-16 135300" src="https://github.com/user-attachments/assets/9228ad01-9eb3-41e5-b1f2-60d4726b0b4e">
-
-
+<img width="314" alt="Screenshot 2024-11-16 135528" src="https://github.com/user-attachments/assets/d9023c15-6558-4439-a2d4-f81ea47c9c6a">
 
 ## Interface: 
 1) If you use Homeassistant keep the api: block
