@@ -29,7 +29,7 @@ Make sure the TX pin defined in YAML is connected to TX pin of the TTL to RS485 
 2) if you use MQTT/NodeRed keep the mqtt: block
 
 
-3)  If you just need the web interface keep the webserver: block
+3)  If you just need the web interface keep the web_server: block
 
 
 # Home Assistant Screen Shot:
