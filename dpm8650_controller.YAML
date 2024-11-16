@@ -1,0 +1,188 @@
+esphome:
+  name: dpm8650_controller
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+logger:
+  level: INFO
+
+api:
+
+web_server:
+  version: 3
+
+ota:
+  - platform: esphome
+    password: "afafd3c4bba9467b8f842f8d622f1435"
+
+
+mqtt:
+   broker: !secret mqtt_host
+   username: !secret mqtt_username
+   password: !secret mqtt_password
+   id: mqtt_client
+
+# UART configuration for RS485 communication
+uart:
+  tx_pin: GPIO21
+  rx_pin: GPIO19
+  baud_rate: 115200
+  stop_bits: 1
+  parity: NONE
+
+modbus_controller:
+  id: modbus1
+  address: 1  # Slave address (1 for DPM86XX)
+  update_interval: 2s  # Poll every 5 seconds
+
+binary_sensor:
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "CCCV Output State"
+    address: 0x1000  # Register for CCCV output state (1000H)
+    register_type: holding
+    filters:
+      - lambda: |-
+          if (x == 0) {
+            id(cccv_output_state).publish_state("No Output");
+          } else if (x == 1) {
+            id(cccv_output_state).publish_state("CV");
+          } else if (x == 2) {
+            id(cccv_output_state).publish_state("CC");
+          }
+          return x == 1 || x == 2;  // True for CV or CC states, False for No Output
+    device_class: "power"
+
+# Add a text sensor to display the CCCV output state as a human-readable label
+text_sensor:
+  - platform: template
+    name: "CCCV Output State Label"
+    id: cccv_output_state
+    icon: "mdi:power-plug"  # Optional: icon for display in Home Assistant
+
+sensor:
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "MAX Output Voltage"
+    address: 0x0000  # Starting register for voltage
+    register_type: holding
+    value_type: U_WORD  # 16-bit unsigned integer
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01  # Convert raw value to actual voltage (example: 0x01F4 -> 5.00V)
+
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "MAX Output Current"
+    address: 0x0001  # Starting register for current
+    register_type: holding
+    value_type: U_WORD  # 16-bit unsigned integer
+    unit_of_measurement: "A"
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001  # Convert raw value to actual current (example: 0x1388 -> 5.00A)
+
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "Output Voltage"
+    address: 0x1001  # Starting register for voltage
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01  # Convert raw value to actual voltage (e.g., 0x01F4 -> 5.00V)
+  
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "Output Current"
+    address: 0x1002  # Starting register for current
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001  # Convert raw value to actual current (e.g., 0x1388 -> 5.00A)
+
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "Temperature"
+    address: 0x1003  # Starting register for current
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    filters:
+      - multiply: 1  # Convert raw value to actual current (e.g., 0x1388 -> 5.00A)
+
+# Number inputs to control voltage and current
+number:
+  - platform: template
+    name: "Set MAX Voltage"
+    id: set_voltage
+    optimistic: true
+    min_value: 0
+    max_value: 60
+    step: 0.1
+    mode: BOX
+    restore_value: True
+    set_action:
+      - lambda: |-
+          int voltage = id(set_voltage).state * 100;  // Convert to 2-byte format (scaled by 100)
+          int current = id(set_current).state * 1000; // Get current setting from another box
+
+          // Create payload for voltage and current
+          std::vector<uint16_t> payload = {uint16_t(voltage), uint16_t(current)};
+          // Write the voltage and current to registers (0x0000 for voltage, 0x0001 for current)
+          esphome::modbus_controller::ModbusCommandItem write_command = 
+              esphome::modbus_controller::ModbusCommandItem::create_write_multiple_command(id(modbus1), 0x0000, payload.size(), payload);
+          id(modbus1)->queue_command(write_command);
+
+  - platform: template
+    name: "Set MAX Current"
+    id: set_current
+    optimistic: true
+    min_value: 0
+    max_value: 50
+    step: 0.1
+    mode: BOX
+    restore_value: True
+    set_action:
+      - lambda: |-
+          int voltage = id(set_voltage).state * 100;  // Get voltage setting from another box
+          int current = id(set_current).state * 1000; // Convert to 2-byte format (scaled by 1000)
+
+          // Create payload for voltage and current
+          std::vector<uint16_t> payload = {uint16_t(voltage), uint16_t(current)};
+          // Write the voltage and current to registers (0x0000 for voltage, 0x0001 for current)
+          esphome::modbus_controller::ModbusCommandItem write_command = 
+              esphome::modbus_controller::ModbusCommandItem::create_write_multiple_command(id(modbus1), 0x0000, payload.size(), payload);
+          id(modbus1)->queue_command(write_command);
+
+# Switch to enable/disable output
+switch:
+  - platform: template
+    name: "Output Control"
+    id: output_control
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          // Send command to enable output (e.g., register 0x0002, value 1 for enable)
+          std::vector<uint16_t> enable_payload = {1};
+          esphome::modbus_controller::ModbusCommandItem enable_command =
+              esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0002, enable_payload[0]);
+          id(modbus1)->queue_command(enable_command);
+          
+    turn_off_action:
+      - lambda: |-
+          // Send command to disable output (e.g., register 0x0002, value 0 for disable)
+          std::vector<uint16_t> disable_payload = {0};
+          esphome::modbus_controller::ModbusCommandItem disable_command =
+              esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0002, disable_payload[0]);
+          id(modbus1)->queue_command(disable_command);
+
