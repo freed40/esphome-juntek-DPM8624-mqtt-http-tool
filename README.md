@@ -10,7 +10,7 @@
 Long-press SET button the DPM8650 and make sure that:
 
 Inverter setup:
-"5-CS" is set to "__1__"  (sets the inverter to RS485 modbus)
+"5-CS" is set to "__1__"  (sets the communication port to RS485 modbus)
 
 ![Screenshot 2024-11-16 140530](https://github.com/user-attachments/assets/3c7d8b94-be98-4546-a028-9f66a0a23167)
 
