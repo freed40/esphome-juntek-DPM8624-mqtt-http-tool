@@ -130,4 +130,10 @@ You can also control the DPM8650 via a built-in web tool:
   `dpm8650_controller/binary_sensor/cccv_output_state/state`
 
 ---
-Feel free to raise an issue on GitHub if you encounter any problems or have suggestions for improvements.
+## Resources
+
+[Library](https://github.com/Lotiq/DPM8600).
+[Manual](./dpm8650_controller.YAML).
+[Modbus Protocol](./dpm8650_controller.YAML).
+
+
