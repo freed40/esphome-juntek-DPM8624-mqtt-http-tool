@@ -1,9 +1,22 @@
 # esphome-juntek-DPM8650-mqtt-http-tool
  Control your JUNTEK 50A Buck converter using its RS585 interface. Homeasistant/NodeRed/Web Control  ESPHome YAML Config
 
+# Hardware Setup:
 
 
 
+# Home Assistant Screen Shot:
+
+![Screenshot 2024-11-16 131035](https://github.com/user-attachments/assets/b4653e18-b158-4e96-b338-9c1baadd233c)
+
+![Screenshot 2024-11-16 131049](https://github.com/user-attachments/assets/e3875b73-5015-4242-b751-a7b257a10a61)
+
+
+
+
+# Web-Tool Screen Shot:
+
+![Screenshot 2024-11-16 122421](https://github.com/user-attachments/assets/ed2d3045-e1a3-45d1-9db0-80c54820f2ea)
 
 
 # MQTT:
