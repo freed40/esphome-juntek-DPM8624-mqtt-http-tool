@@ -10,7 +10,7 @@
 Long-press SET button the DPM8650 and make sure that:
 
 Inverter setup:
-"5-CS" is set to "__1_"  (sets the inverter to RS485 modbus)
+"5-CS" is set to "__1__"  (sets the inverter to RS485 modbus)
 
 "6-bd" is set to "115.2"  (sets the baudrate to 115200)
 
