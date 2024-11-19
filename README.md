@@ -9,7 +9,8 @@ Control your **[Juntek DPM8650 50A Buck Converter](./JT-DPM8650_Datasheet-EN_202
 
 ### Hardware Diagram
 
-![Screenshot 2024-11-19 124503](https://github.com/user-attachments/assets/2ff2e94e-a6d3-45d5-b67f-7ed3d3026e0c)
+
+![Screenshot 2024-11-19 125602](https://github.com/user-attachments/assets/147db45e-df32-43c5-aa40-c21b1624f38f)
 
 
 ---
