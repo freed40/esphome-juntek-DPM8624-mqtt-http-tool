@@ -24,7 +24,8 @@ Wiring for the ESP32 to RS485 connection:
 
 Ensure the TX and RX pins are connected as described:
 
-<img width="314" alt="Wiring Diagram" src="https://github.com/user-attachments/assets/d9023c15-6558-4439-a2d4-f81ea47c9c6a">
+<img width="190" alt="Screenshot 2024-11-19 125220" src="https://github.com/user-attachments/assets/dd39aa32-035a-4258-9c77-b1909ab9c67b">
+
 
 For detailed ESPHome configuration, refer to the [DPM8650 Controller YAML](./dpm8650_controller.YAML).
 
