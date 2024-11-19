@@ -81,7 +81,8 @@ Here's a screenshot of how the DPM8650 sensors and controls appear in Home Assis
 
 You can also control the DPM8650 via a built-in web tool:
 
-![Web Tool Screenshot](https://github.com/user-attachments/assets/ed2d3045-e1a3-45d1-9db0-80c54820f2ea)
+![Screenshot 2024-11-19 125904](https://github.com/user-attachments/assets/1fda96f6-53a5-4ffc-a6ba-e04948965e11)
+
 
 ---
 
