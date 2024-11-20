@@ -125,11 +125,11 @@ You can also control the DPM8650 via a built-in web tool:
 
   ![Screenshot 2024-11-20 110606](https://github.com/user-attachments/assets/c65462c0-e6ce-4368-a1a1-66056a36dfd6)
 
-  Message payload string `"on"` enables Converter output  
+  Message payload string `on` enables Converter output  
 
   ![Screenshot 2024-11-20 110631](https://github.com/user-attachments/assets/5a5aa78e-367e-4854-9ecf-8271a99b5652)
 
-  Message payload string `"off"` disables converter output
+  Message payload string `off` disables converter output
 
 - **MQTT Binary Sensor 'CCCV Output State'**  
   - State Topic: `dpm8650_controller/binary_sensor/cccv_output_state/state`
