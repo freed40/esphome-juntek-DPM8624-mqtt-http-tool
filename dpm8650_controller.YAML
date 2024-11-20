@@ -114,8 +114,6 @@ number:
     set_action:
       - lambda: |-
           ESP_LOGD("voltage", "Old Value: %.2f V", id(set_voltage).state);  // Just logging, no command sent
-          // The actual Modbus command is not sent here
-          
     on_value:
       then:
         - delay: 10ms  #Small delay to ensure the value is properly updated
@@ -140,7 +138,6 @@ number:
     set_action:
       - lambda: |-
           ESP_LOGD("current", "Old Value: %.2f A", id(set_current).state);  // Just logging, no command sent
-
     on_value:
       then:
         - delay: 0.01s  # Small delay to ensure the value is properly updated
