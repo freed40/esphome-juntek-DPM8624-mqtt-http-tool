@@ -132,10 +132,12 @@ You can also control the DPM8650 via a built-in web tool:
 
 - **MQTT Subscribe Text Sensor 'MQTT Voltage Command'**
   - Topic: `home/commands/voltage`
+    
     (the converter subscribes to this topic, publish a number (i.e. 12.3) to this topic to set Voltage to 12.3V)
 
 - **MQTT Subscribe Text Sensor 'MQTT Current Command'**
   - Topic: `home/commands/current`
+    
      (the converter subscribes to this topic, a number (i.e. 12.3) to this topic to set Current to 12.3A)
 
 ---
