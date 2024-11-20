@@ -50,8 +50,10 @@ To set up your Juntek DPM8650, follow these steps:
      ![RS485 Communication Setting](https://github.com/user-attachments/assets/3c7d8b94-be98-4546-a028-9f66a0a23167)
 
    - **Baud Rate (6-bd)**: Set this to `009.6` for a baud rate of 9600.
+  
+     ![Screenshot 2024-11-19 125050](https://github.com/user-attachments/assets/3caa70ed-20bc-4912-88d7-e7dbc53f51af)
 
-![Screenshot 2024-11-19 125050](https://github.com/user-attachments/assets/3caa70ed-20bc-4912-88d7-e7dbc53f51af)
+
 
 
 
