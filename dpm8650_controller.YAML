@@ -41,6 +41,9 @@ modbus_controller:
     command_throttle: 100ms   # Throttle commands to prevent overlapping
 
 
+
+
+
 binary_sensor:
   - platform: modbus_controller
     modbus_controller_id: modbus1
@@ -67,42 +70,34 @@ text_sensor:
     id: cccv_output_state
     icon: "mdi:power-plug"  # Optional: icon for display in Home Assistant
 
+
   - platform: mqtt_subscribe
     name: "MQTT Voltage Command"
     id: mqtt_voltage_command
     topic: "home/commands/voltage"
-    internal: true
+    internal: true  # This makes the sensor internal
     on_value:
       then:
         - lambda: |-
-            float voltage = atof(x.c_str());
-            if (voltage >= 0 && voltage <= 60) {
-              ESP_LOGI("MQTT", "Updating voltage via publish_state: %.2f", voltage);
-              id(set_voltage).publish_state(voltage);  // Updates UI and triggers set_action
-              int modbus_voltage = voltage * 100;
-              auto command = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0000, modbus_voltage);
-              id(modbus1)->queue_command(command);  // Ensure immediate update
+            float voltage = atof(x.c_str());  // Convert received string to float
+            if (voltage >= 0 && voltage <= 60) {  // Check bounds
+              id(set_voltage).publish_state(voltage);
             } else {
-              ESP_LOGW("MQTT", "Invalid voltage received: %.2f", voltage);
+              ESP_LOGW("MQTT", "Received invalid voltage value: %.2f", voltage);
             }
-
   - platform: mqtt_subscribe
     name: "MQTT Current Command"
     id: mqtt_current_command
     topic: "home/commands/current"
-    internal: true
+    internal: true  # This makes the sensor internal
     on_value:
       then:
         - lambda: |-
-            float current = atof(x.c_str());
-            if (current >= 0 && current <= 50) {
-              ESP_LOGI("MQTT", "Updating current via publish_state: %.3f", current);
-              id(set_current).publish_state(current);  // Updates UI and triggers set_action
-              int modbus_current = current * 1000;
-              auto command = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0001, modbus_current);
-              id(modbus1)->queue_command(command);  // Ensure immediate update
+            float current = atof(x.c_str());  // Convert received string to float
+            if (current >= 0 && current <= 50) {  // Check bounds
+              id(set_current).publish_state(current);
             } else {
-              ESP_LOGW("MQTT", "Invalid current received: %.3f", current);
+              ESP_LOGW("MQTT", "Received invalid current value: %.2f", current);
             }
 
 number:
@@ -118,10 +113,18 @@ number:
     restore_value: true
     set_action:
       - lambda: |-
-          int voltage = id(set_voltage).state * 100;  // Convert to Modbus format
-          ESP_LOGI("voltage", "Setting MAX Voltage to: %.2f V", id(set_voltage).state);
-          auto command = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0000, voltage);
-          id(modbus1)->queue_command(command);  // Send the Modbus command
+          ESP_LOGD("voltage", "Old Value: %.2f V", id(set_voltage).state);  // Just logging, no command sent
+          // The actual Modbus command is not sent here
+          
+    on_value:
+      then:
+        - delay: 10ms  #Small delay to ensure the value is properly updated
+        - lambda: |-
+            ESP_LOGI("voltage", "Updating MAX Voltage to: %.2f V", id(set_voltage).state);
+            int voltage = id(set_voltage).state * 100;
+            auto command = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0000, voltage);
+            id(modbus1)->queue_command(command);
+
  
 
   - platform: template
@@ -136,13 +139,19 @@ number:
     restore_value: true
     set_action:
       - lambda: |-
-          int current = id(set_current).state * 1000;  // Convert to Modbus format
-          ESP_LOGI("current", "Setting MAX Current to: %.3f A", id(set_current).state);
-          auto command = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0001, current);
-          id(modbus1)->queue_command(command);  // Send the Modbus command
- 
+          ESP_LOGD("current", "Old Value: %.2f A", id(set_current).state);  // Just logging, no command sent
 
+    on_value:
+      then:
+        - delay: 0.01s  # Small delay to ensure the value is properly updated
+        - lambda: |-
+            int current = id(set_current).state * 1000;  // Convert to Modbus format
+            ESP_LOGI("current", "Setting MAX Current to: %.3f A", id(set_current).state);  // Log the new value
+            auto command = esphome::modbus_controller::ModbusCommandItem::create_write_single_command(id(modbus1), 0x0001, current);
+            id(modbus1)->queue_command(command);  // Send the Modbus command
+ 
 sensor:
+
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "MAX Output Voltage"
@@ -154,7 +163,7 @@ sensor:
     accuracy_decimals: 2
     filters:
       - multiply: 0.01
-    
+
 
   - platform: modbus_controller
     modbus_controller_id: modbus1
@@ -207,6 +216,8 @@ sensor:
     filters:
       - multiply: 1
     
+
+
 
 
 switch:
