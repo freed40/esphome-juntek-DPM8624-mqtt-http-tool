@@ -133,7 +133,7 @@ You can also control the DPM8650 via a built-in web tool which you can find on y
 
   Message payload string `off` to `dpm8650_controller/switch/output_control/command` disables converter output
 
-  ![Screenshot 2024-11-20 132203](https://github.com/user-attachments/assets/8c17a976-8cc4-436f-bbff-5d378bf162e8)
+  
 
 - **MQTT Binary Sensor 'CCCV Output State'**  
   - State Topic: `dpm8650_controller/binary_sensor/cccv_output_state/state`
@@ -143,15 +143,11 @@ You can also control the DPM8650 via a built-in web tool which you can find on y
 - **MQTT Subscribe Text Sensor 'MQTT Voltage Command'**  
   - Topic: `home/commands/voltage`  
     (The converter subscribes to this topic. Publish a number (e.g., 12.3) to set the voltage to 12.3V)
-
-    ![Screenshot 2024-11-20 110606](https://github.com/user-attachments/assets/6349bbf5-beb7-486c-b19a-ec98a8492a8f)
-
-
 - **MQTT Subscribe Text Sensor 'MQTT Current Command'**  
   - Topic: `home/commands/current`  
     (The converter subscribes to this topic. Publish a number (e.g., 12.3) to set the current to 12.3A)
     
-    ![Screenshot 2024-11-20 110631](https://github.com/user-attachments/assets/bedf8cd7-eafc-412d-89bb-b33cc9bbb289)
+  ![Screenshot 2024-11-20 132203](https://github.com/user-attachments/assets/8c17a976-8cc4-436f-bbff-5d378bf162e8)
 
 ---
 ## Resources
