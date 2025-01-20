@@ -40,7 +40,26 @@ modbus_controller:
     update_interval: 1500ms  # Polling interval for Modbus queries
     command_throttle: 100ms   # Throttle commands to prevent overlapping
 
+globals:
 
+  - id: reset_energy
+    type: bool
+    restore_value: false
+    initial_value: "false"
+
+  - id: energy_wh
+    type: float
+    restore_value: true  # Ensures the value persists across reboots
+    initial_value: "0.0"
+
+button:
+  - platform: template
+    name: "Reset Energy Consumption"
+    icon: "mdi:restart"  # A nice restart icon for resetting energy consumption
+    on_press:
+      then:
+        - lambda: |-
+            id(reset_energy) = true;  // Set the reset flag
 
 
 
@@ -179,7 +198,7 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "Output Voltage"
-    icon: "mdi:flash"  # Icon for Output Voltage
+    icon: "mdi:flash"
     address: 0x1001
     register_type: holding
     value_type: U_WORD
@@ -187,11 +206,12 @@ sensor:
     accuracy_decimals: 2
     filters:
       - multiply: 0.01
-    
+    id: output_voltage  # ID for use in calculations
+
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "Output Current"
-    icon: "mdi:current-ac"  # Icon for Output Current
+    icon: "mdi:current-ac"
     address: 0x1002
     register_type: holding
     value_type: U_WORD
@@ -199,7 +219,33 @@ sensor:
     accuracy_decimals: 3
     filters:
       - multiply: 0.001
-    
+    id: output_current  # ID for use in calculations
+
+  - platform: template
+    name: "Output Power"
+    icon: "mdi:flash-outline"
+    unit_of_measurement: "W"
+    accuracy_decimals: 2
+    update_interval: 1s
+    lambda: |-
+      return id(output_voltage).state * id(output_current).state;
+    id: output_power  # ID for the Watt-hour meter
+
+  - platform: template
+    name: "Energy Consumption"
+    icon: "mdi:counter"
+    unit_of_measurement: "Wh"
+    accuracy_decimals: 2
+    update_interval: 1s
+    lambda: |-
+      if (id(reset_energy)) {
+        id(energy_wh) = 0.0;  // Reset the energy counter
+        id(reset_energy) = false;  // Clear the reset flag
+      }
+      id(energy_wh) += id(output_power).state / 3600.0;  // Increment by power (W) divided by seconds in an hour
+      return id(energy_wh);
+    id: energy_consumption
+
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "Temperature"
@@ -215,9 +261,10 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "On/Off Raw"
-    id: on_off_sensor  # Link this raw value to the text sensor
+    id: on_off_sensor 
     address: 0x0002
     register_type: holding
+    icon: "mdi:power"  # Icon for Output Control
     value_type: U_WORD
     unit_of_measurement: ""
     accuracy_decimals: 0
@@ -225,11 +272,12 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: modbus1
-    name: "Total Wh meter"
-    address: 0x0004  # Hypothetical address
+    name: "Total Ah meter"
+    address: 0x0004  
     register_type: holding
     value_type: U_WORD
-    unit_of_measurement: "Wh"
+    unit_of_measurement: "Ah"
+    icon: "mdi:counter"
     accuracy_decimals: 2
     filters:
       - multiply: 0.01    
@@ -237,13 +285,27 @@ sensor:
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "OFF-CV-CC Raw"
-    id: off_cv_cc_sensor  # Link this raw value to the text sensor
-    address: 0x1000  # Hypothetical address
+    icon: "mdi:power"
+    id: off_cv_cc_sensor  
+    address: 0x1000  
     register_type: holding
     value_type: U_WORD
     unit_of_measurement: ""
     accuracy_decimals: 0
     internal: True
+
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "Device AMP Limit"
+    icon: "mdi:information-outline"
+    address: 0x1005  
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "A"
+    accuracy_decimals: 0
+    retain: True
+    filters:
+      - multiply: 0.001 
 
 switch:
   - platform: template
