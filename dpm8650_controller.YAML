@@ -44,32 +44,35 @@ modbus_controller:
 
 
 
-binary_sensor:
-  - platform: modbus_controller
-    modbus_controller_id: modbus1
-    name: "CCCV Output State"
-    icon: "mdi:flash"  # Example: Lightning bolt icon for power output state
-    address: 0x1000  # Register for CCCV output state (1000H)
-    register_type: holding
-    filters:
-      - lambda: |-
-          if (x == 0) {
-            id(cccv_output_state).publish_state("No Output");
-          } else if (x == 1) {
-            id(cccv_output_state).publish_state("CV");
-          } else if (x == 2) {
-            id(cccv_output_state).publish_state("CC");
-          }
-          return x == 1 || x == 2;  // True for CV or CC states, False for No Output
-    device_class: "power"
-
 # Add a text sensor to display the CCCV output state as a human-readable label
 text_sensor:
   - platform: template
-    name: "CCCV Output State Label"
-    id: cccv_output_state
-    icon: "mdi:power-plug"  # Optional: icon for display in Home Assistant
+    name: "OFF-CV-CC Status"
+    lambda: |-
+      if (id(off_cv_cc_sensor).state == 0) {
+        return std::string("Output disabled");
+      } else if (id(off_cv_cc_sensor).state == 1) {
+        return std::string("CV");
+      } else if (id(off_cv_cc_sensor).state == 2) {
+        return std::string("CC");
+      } else {
+        return std::string("Unknown");
+      }
+    update_interval: 1s  # Adjust as needed
+    icon: "mdi:flash"
 
+  - platform: template
+    name: "Output State"
+    lambda: |-
+      if (id(on_off_sensor).state == 0) {
+        return std::string("STOP");
+      } else if (id(on_off_sensor).state == 1) {
+        return std::string("RUN");
+      } else {
+        return std::string("Unknown");
+      }
+    update_interval: 1s  # Adjust based on your needs
+    icon: "mdi:power"
 
   - platform: mqtt_subscribe
     name: "MQTT Voltage Command"
@@ -161,7 +164,6 @@ sensor:
     filters:
       - multiply: 0.01
 
-
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "MAX Output Current"
@@ -174,7 +176,6 @@ sensor:
     filters:
       - multiply: 0.001
     
-
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "Output Voltage"
@@ -187,7 +188,6 @@ sensor:
     filters:
       - multiply: 0.01
     
-  
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "Output Current"
@@ -200,7 +200,6 @@ sensor:
     filters:
       - multiply: 0.001
     
-
   - platform: modbus_controller
     modbus_controller_id: modbus1
     name: "Temperature"
@@ -213,9 +212,38 @@ sensor:
     filters:
       - multiply: 1
     
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "On/Off Raw"
+    id: on_off_sensor  # Link this raw value to the text sensor
+    address: 0x0002
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: ""
+    accuracy_decimals: 0
+    internal: True
 
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "Total Wh meter"
+    address: 0x0004  # Hypothetical address
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "Wh"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01    
 
-
+  - platform: modbus_controller
+    modbus_controller_id: modbus1
+    name: "OFF-CV-CC Raw"
+    id: off_cv_cc_sensor  # Link this raw value to the text sensor
+    address: 0x1000  # Hypothetical address
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: ""
+    accuracy_decimals: 0
+    internal: True
 
 switch:
   - platform: template
