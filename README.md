@@ -90,7 +90,8 @@ Here's a screenshot of how the DPM8650 sensors and controls appear in Home Assis
 
 You can also control the DPM8650 via a built-in web tool which you can find on your network at http://dpm8650_controller.local/
 
-![Screenshot 2024-11-19 125904](https://github.com/user-attachments/assets/1fda96f6-53a5-4ffc-a6ba-e04948965e11)
+![Screenshot 2025-01-20 152345](https://github.com/user-attachments/assets/6ed36754-8280-4219-99bd-c5b63c4d871b)
+
 
 
 ## MQTT Configuration
