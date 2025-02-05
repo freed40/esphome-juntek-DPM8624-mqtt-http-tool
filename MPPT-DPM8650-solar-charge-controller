@@ -137,8 +137,10 @@ number:
     min_value: 0.0
     max_value: 20.0
     step: 0.1
+    mode: BOX
     unit_of_measurement: "A"
-    initial_value: 5.0
+    initial_value: 5
+    restore_value: true
     on_value:
       then:
         - lambda: |-
@@ -344,7 +346,7 @@ switch:
     icon: "mdi:power"
     id: output_control
     optimistic: true
-    restore_mode: ALWAYS_OFF
+    restore_mode: RESTORE_DEFAULT_OFF
     turn_on_action:
       - lambda: |-
           std::vector<uint16_t> enable_payload = {1};
@@ -364,7 +366,7 @@ switch:
     icon: "mdi:solar-power"
     id: mppt_enable
     optimistic: true
-    restore_mode: ALWAYS_OFF
+    restore_mode: RESTORE_DEFAULT_OFF
     turn_on_action:
       - lambda: |-
           id(mppt_enabled) = true;
@@ -379,7 +381,13 @@ interval:
     then:
       - lambda: |-
           /*****************************************************************
-           * Current-Sweep MPPT *
+           * MPPT State Machine
+           *  - Voltage pinned at id(max_charge_voltage)
+           *  - Sweep current upward from near zero
+           *  - Detect collapses => shutdown + partial reset
+           *  - 3 consecutive "not rising" => short 450 ms OFF => resume near
+           *    best_current_so_far minus an offset => STATE_CREEP_UP
+           *  - Time-based forced resweep every 60 s remains in place
            *****************************************************************/
 
           enum MpptState {
@@ -390,23 +398,19 @@ interval:
             STATE_GO_BELOW_BEST,
             STATE_CREEP_UP,
             STATE_DONE,
-            STATE_SHORT_OFF  // <--- NEW intermediate state
+            STATE_SHORT_OFF
           };
 
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
           // Persistent local/static variables
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
           static bool       mppt_init               = false;
           static MpptState  mppt_state              = STATE_INIT_VOLTAGE;
 
-          // Track best power/current
           static float      best_power_so_far       = 0.0f;
           static float      best_current_so_far     = 0.0f;
-
-          // For comparing power
           static float      last_power              = 0.0f;
 
-          // For DONE hold time
           static uint32_t   done_enter_time         = 0;
 
           // For forced full resweep
@@ -422,40 +426,43 @@ interval:
           static bool       forced_cycle            = false;
           static uint32_t   forced_cycle_time       = 0;
 
-          // For "current not rising" logic: 3 consecutive fails
+          // For "current not rising" => 3 consecutive fails
           static int        consecutive_not_rising  = 0;
 
-          // NEW: For the 450 ms short off
-          static bool       short_off_executed      = false; // ensure we only turn off once
+          // For short-off logic
+          static bool       short_off_executed      = false;
           static uint32_t   short_off_start_time    = 0;
 
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
           // TUNING PARAMETERS
-          // ----------------------------------------------------------------
-          const float STEP_I_UP            = 0.1f;    // increment current by 0.1 A
-          const float BIG_DROP_THRESHOLD   = 5.0f;    // collapse if power delta < -5 W
-          const float BELOW_BEST_OFFSET    = 0.3f;
-          const float MARGIN               = 0.3f;
-          const float BEST_POWER_RATIO     = 0.70f;   // 70% => "good enough" threshold
-          const uint32_t DONE_HOLD_MS      = 1000;    
-          const uint32_t RESWEEP_MS        = 60000;   // forced resweep every 60 s
-          const uint32_t RESWEEP_IGNORE_MS = 5000;    // ignore collapse for 5 s after forced resweep
-          const uint32_t INIT_HOLD_MS      = 500;     // hold at 0 A after forced resweep
-          const float FAKE_MAX_CURRENT     = 10.0f;   // hardware limit
-          const float MIN_BEST_CURRENT     = 0.1f;    // skip certain logic if best_current < 0.1 A
+          // -------------------------------------------------------------
+          const float STEP_I_UP            = 0.1f;     // increments for SWEEP
+          const float BIG_DROP_THRESHOLD   = 3.0f;     // collapse if power delta < -5W
+          const float BELOW_BEST_OFFSET    = 0.3f;     // used in GO_BELOW_BEST
+          const float MARGIN               = 0.3f;     // used in SHUTDOWN
+          const float BEST_POWER_RATIO     = 0.70f;    // 70% => "good enough"
+          const uint32_t DONE_HOLD_MS      = 100;     // hold in DONE for 100ms
+          const uint32_t RESWEEP_MS        = 60000;    // forced resweep every 60s
+          const uint32_t RESWEEP_IGNORE_MS = 5000;     // ignore collapse for 5s after forced resweep
+          const uint32_t INIT_HOLD_MS      = 500;      // hold at 0 A after forced cycle
+          const float FAKE_MAX_CURRENT     = 10.0f;    // hardware limit, if any
+          const float MIN_BEST_CURRENT     = 0.1f;     // skip some logic if best < 0.1
 
-          // "not rising" ratio & max consecutive fails
-          const float NOT_RISING_RATIO      = 0.20f;   
-          const int   NOT_RISING_MAX_FAILS  = 10;
+          // "not rising" ratio & consecutive fail limit
+          const float NOT_RISING_RATIO      = 0.25f;   
+          const int   NOT_RISING_MAX_FAILS  = 5;
 
-          // The new 450 ms "recovery off" time
-          const uint32_t SHORT_OFF_MS = 500;
+          // Short OFF time in ms
+          const uint32_t SHORT_OFF_MS = 450;
 
-          // ----------------------------------------------------------------
+          // How much we subtract from best_current_so_far after the short off
+          const float BEST_CURRENT_OFFSET = 0.3f;
+
+          // -------------------------------------------------------------
           // Read user settings and sensors
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
           if (!id(mppt_enabled)) {
-            // If MPPT is disabled, reset everything and exit
+            // If MPPT is disabled, reset state
             mppt_init  = false;
             mppt_state = STATE_INIT_VOLTAGE;
             return;
@@ -469,12 +476,12 @@ interval:
           float v_max      = id(max_charge_voltage).state;
           float delta_power= p_meas - last_power;
 
-          // ----------------------------------------------------------------
-          // One-time init when MPPT is first enabled
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
+          // Initial setup on first run
+          // -------------------------------------------------------------
           if (!mppt_init) {
-            mppt_init           = true;
-            mppt_state          = STATE_INIT_VOLTAGE;
+            mppt_init = true;
+            mppt_state = STATE_INIT_VOLTAGE;
             best_power_so_far   = p_meas;
             best_current_so_far = i_set;
             last_power          = p_meas;
@@ -484,16 +491,18 @@ interval:
             return;
           }
 
-          // ----------------------------------------------------------------
-          // Forced Resweep check (time-based)
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
+          // Check for time-based forced resweep
+          // -------------------------------------------------------------
           if (millis() - last_forced_resweep >= RESWEEP_MS) {
             ESP_LOGI("MPPT", "Time-based forced FULL resweep => reinit STATE_INIT_VOLTAGE");
             resweep_in_progress = true;
             resweep_ignore_until = millis() + RESWEEP_IGNORE_MS;
+
             // Output OFF + current=0, then re-init
             id(set_current).publish_state(0.0f);
             id(output_control).turn_off();
+
             forced_cycle       = true;
             forced_cycle_time  = millis();
             best_power_so_far   = 0.0f;
@@ -503,17 +512,17 @@ interval:
             last_forced_resweep = millis();
           }
 
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
           // Main State Machine
-          // ----------------------------------------------------------------
+          // -------------------------------------------------------------
           switch (mppt_state) {
 
-            // ------------------------------------------------------------
-            // STATE_INIT_VOLTAGE
-            //   - Pin output voltage to user max
-            //   - Typically set current to 0
-            //   - If forced resweep => hold at 0 A for a bit
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
+            // STATE_INIT_VOLTAGE:
+            //   - Set voltage to v_max
+            //   - Typically set current=0
+            //   - If forced resweep => hold at 0 for INIT_HOLD_MS
+            // -----------------------------------------------------------
             case STATE_INIT_VOLTAGE: {
               id(set_voltage).publish_state(v_max);
 
@@ -533,7 +542,7 @@ interval:
                   }
                 }
 
-                // Once we've held for enough time, move on to SWEEP
+                // Once we've held for enough time, proceed
                 static uint32_t init_start_time = 0;
                 if (init_start_time == 0) {
                   init_start_time = millis();
@@ -544,7 +553,7 @@ interval:
                   ESP_LOGI("MPPT", "STATE_INIT_VOLTAGE => SWEEP");
                 }
               } else {
-                // Normal initialization
+                // Normal init
                 if (fabs(id(set_current).state) > 0.001f) {
                   id(set_current).publish_state(0.0f);
                   ESP_LOGI("MPPT", "STATE_INIT_VOLTAGE => set_current=0.00A");
@@ -554,20 +563,21 @@ interval:
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_SWEEP
-            //   - Ramp current upward in small increments
-            //   - Big power drop => COLLAPSE
-            //   - 3 consecutive "not rising" => go to STATE_SHORT_OFF
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
+            // STATE_SWEEP:
+            //   - Step current upward
+            //   - If big power drop => COLLAPSE
+            //   - If 3 consecutive “not rising” => short off => resume near best
+            // -----------------------------------------------------------
             case STATE_SWEEP: {
-              // Check for collapse first (ignore if in forced resweep window)
-              if (!resweep_in_progress
+              // Check for collapse
+              if (!resweep_in_progress 
                   && !re_collapse_in_progress
                   && (millis() >= resweep_ignore_until)
                   && (delta_power < -BIG_DROP_THRESHOLD))
               {
-                ESP_LOGW("MPPT", "Collapse detected (dP=%.2fW). best=%.2fW@%.2fA => COLLAPSE",
+                ESP_LOGW("MPPT", 
+                         "Collapse detected (dP=%.2fW). best=%.2fW@%.2fA => COLLAPSE",
                          delta_power, best_power_so_far, best_current_so_far);
                 re_collapse_in_progress = true;
                 mppt_state = STATE_COLLAPSE;
@@ -576,15 +586,15 @@ interval:
 
               // Step current upward
               float new_i = i_set + STEP_I_UP;
-              if (new_i > user_max)          new_i = user_max;
-              if (new_i > FAKE_MAX_CURRENT)  new_i = FAKE_MAX_CURRENT;
+              if (new_i > user_max)         new_i = user_max;
+              if (new_i > FAKE_MAX_CURRENT) new_i = FAKE_MAX_CURRENT;
 
               if (fabs(new_i - i_set) > 0.001f) {
                 id(set_current).publish_state(new_i);
                 ESP_LOGD("MPPT", "SWEEP => i=%.2f => p=%.2fW", new_i, p_meas);
               }
 
-              // If new power is better, record it & reset consecutive fails
+              // Update best if this is new peak
               if (p_meas > best_power_so_far) {
                 best_power_so_far   = p_meas;
                 best_current_so_far = i_set;
@@ -592,12 +602,13 @@ interval:
                 if (resweep_in_progress || re_collapse_in_progress) {
                   resweep_in_progress     = false;
                   re_collapse_in_progress = false;
-                  ESP_LOGI("MPPT", "SWEEP: Found new best power=%.2fW => end forced/re-collapse",
+                  ESP_LOGI("MPPT", 
+                           "SWEEP: Found new best power=%.2fW => end forced/re-collapse",
                            best_power_so_far);
                 }
               }
 
-              // "Current not rising" => increment counter
+              // Check "not rising"
               if (i_meas < (new_i * NOT_RISING_RATIO)) {
                 consecutive_not_rising++;
                 ESP_LOGD("MPPT",
@@ -605,29 +616,29 @@ interval:
                          i_meas, NOT_RISING_RATIO, new_i, consecutive_not_rising);
 
                 if (consecutive_not_rising >= NOT_RISING_MAX_FAILS) {
+                  // Move to short-off state for 450 ms, then we'll resume near best
                   ESP_LOGW("MPPT",
                            "3 consecutive 'not rising' => transitioning to STATE_SHORT_OFF");
-                  consecutive_not_rising = 0; // reset fail counter
-
-                  // move to short-off state
-                  mppt_state = STATE_SHORT_OFF;
-                  short_off_executed = false; // we'll do the off action once
-                  short_off_start_time = millis();
+                  consecutive_not_rising = 0;
+                  mppt_state             = STATE_SHORT_OFF;
+                  short_off_executed     = false;
+                  short_off_start_time   = millis();
                 }
               } else {
-                // It's rising => reset the fail counter
+                // It's rising => reset fail counter
                 consecutive_not_rising = 0;
               }
 
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_SHORT_OFF
-            //   - Turn output OFF (once), wait 450 ms, then do forced resweep
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
+            // STATE_SHORT_OFF:
+            //   - Turn output off for SHORT_OFF_MS
+            //   - Then resume at (best_current_so_far - offset)
+            //   - Jump to STATE_CREEP_UP
+            // -----------------------------------------------------------
             case STATE_SHORT_OFF: {
-              // Turn output off only once
               if (!short_off_executed) {
                 id(output_control).turn_off();
                 ESP_LOGI("MPPT",
@@ -636,29 +647,38 @@ interval:
                 short_off_executed = true;
               }
 
-              // If 450 ms has passed, do the forced resweep logic
               if (millis() - short_off_start_time >= SHORT_OFF_MS) {
-                ESP_LOGI("MPPT", "450 ms off done => forced full resweep now");
-                
-                // Standard forced-resweep sequence
-                resweep_in_progress = true;
-                resweep_ignore_until = millis() + RESWEEP_IGNORE_MS;
-                id(set_current).publish_state(0.0f);
-                forced_cycle       = true;
-                forced_cycle_time  = millis();
-                best_power_so_far   = 0.0f;
-                best_current_so_far = 0.0f;
-                last_power          = 0.0f;
-                mppt_state          = STATE_INIT_VOLTAGE;
-                last_forced_resweep = millis();
+                // Done with short off => turn back on
+                id(output_control).turn_on();
+
+                // Resume near best_current_so_far minus offset
+                float candidate = best_current_so_far - BEST_CURRENT_OFFSET;
+                if (candidate < 0.0f) candidate = 0.0f;
+
+                // Clamp
+                float user_max_val = id(user_max_current).state;
+                if (candidate > user_max_val)       candidate = user_max_val;
+                if (candidate > FAKE_MAX_CURRENT)    candidate = FAKE_MAX_CURRENT;
+
+                id(set_current).publish_state(candidate);
+                ESP_LOGI("MPPT",
+                         "Short off done => set_current=%.2f (best=%.2f) => STATE_CREEP_UP",
+                         candidate, best_current_so_far);
+
+                // Remain aware of our best point, do NOT reset best_power_so_far
+                // Reset consecutive fails so we don't instantly re-trigger
+                consecutive_not_rising = 0;
+
+                // Jump directly to CREEP_UP
+                mppt_state = STATE_CREEP_UP;
               }
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_COLLAPSE
-            //   - We saw a big power drop => go to shutdown
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
+            // STATE_COLLAPSE:
+            //   - Big power drop => 2-cycle shutdown
+            // -----------------------------------------------------------
             case STATE_COLLAPSE: {
               ESP_LOGW("MPPT", "STATE_COLLAPSE => next=SHUTDOWN");
               mppt_state = STATE_SHUTDOWN;
@@ -666,15 +686,15 @@ interval:
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_SHUTDOWN
-            //   - 2-cycle off logic, then re-enable
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
+            // STATE_SHUTDOWN:
+            //   - 2-cycle OFF, then re-enable
+            // -----------------------------------------------------------
             case STATE_SHUTDOWN: {
               if (shutdown_counter == 0) {
                 float new_i = best_current_so_far - MARGIN;
-                if (new_i < 0.0f) new_i = 0.0f;
-                if (new_i > user_max) new_i = user_max;
+                if (new_i < 0.0f)             new_i = 0.0f;
+                if (new_i > user_max)         new_i = user_max;
                 if (new_i > FAKE_MAX_CURRENT) new_i = FAKE_MAX_CURRENT;
                 id(set_current).publish_state(new_i);
                 id(output_control).turn_off();
@@ -695,14 +715,14 @@ interval:
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_GO_BELOW_BEST
+            // -----------------------------------------------------------
+            // STATE_GO_BELOW_BEST:
             //   - Set current to (best_current - BELOW_BEST_OFFSET)
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
             case STATE_GO_BELOW_BEST: {
               float candidate = best_current_so_far - BELOW_BEST_OFFSET;
               if (candidate < 0) candidate = 0;
-              if (candidate > user_max) candidate = user_max;
+              if (candidate > user_max)         candidate = user_max;
               if (candidate > FAKE_MAX_CURRENT) candidate = FAKE_MAX_CURRENT;
               id(set_current).publish_state(candidate);
               ESP_LOGI("MPPT",
@@ -711,15 +731,13 @@ interval:
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_CREEP_UP
-            //   - Slowly raise current, until 70% of best-power
-            //   - If we can't achieve that, re-collapse
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
+            // STATE_CREEP_UP:
+            //   - Slowly raise current until 70% of best power
+            // -----------------------------------------------------------
             case STATE_CREEP_UP: {
               float target_p = best_power_so_far * BEST_POWER_RATIO;
               if (p_meas >= target_p) {
-                // Good enough => done
                 ESP_LOGI("MPPT", "Reached 70%% => DONE");
                 mppt_state = STATE_DONE;
                 done_enter_time = millis();
@@ -728,10 +746,10 @@ interval:
                 if (new_i > user_max)         new_i = user_max;
                 if (new_i > FAKE_MAX_CURRENT) new_i = FAKE_MAX_CURRENT;
                 if (best_current_so_far > MIN_BEST_CURRENT && new_i > best_current_so_far) {
-                  // We can't go higher than the best known current
+                  // If we can't go higher than the best known current
                   new_i = best_current_so_far;
-                  // If still below 70%, that means re-collapse
                   if (p_meas < target_p) {
+                    // We can't reach 70% => collapse again
                     ESP_LOGW("MPPT",
                              "At best_current=%.2f but p=%.2fW <70%% => re-collapse",
                              best_current_so_far, p_meas);
@@ -742,40 +760,41 @@ interval:
                 }
                 id(set_current).publish_state(new_i);
                 ESP_LOGD("MPPT",
-                         "CREEP_UP => i=%.2f => p=%.2f (< %.2f)", 
+                         "CREEP_UP => i=%.2f => p=%.2f (< %.2f)",
                          new_i, p_meas, target_p);
               }
               break;
             }
 
-            // ------------------------------------------------------------
-            // STATE_DONE
+            // -----------------------------------------------------------
+            // STATE_DONE:
             //   - Sit at final current, watch for new collapse
-            // ------------------------------------------------------------
+            // -----------------------------------------------------------
             case STATE_DONE: {
               if ((millis() - done_enter_time) > DONE_HOLD_MS) {
-                // Check if we get a new collapse
+                // If we get a new big drop, forcibly resweep
                 if (delta_power < -BIG_DROP_THRESHOLD) {
                   ESP_LOGW("MPPT",
-                           "NEW COLLAPSE in DONE => forced resweep (dP=%.2f)", 
+                           "NEW COLLAPSE in DONE => forced resweep (dP=%.2f)",
                            delta_power);
-                  resweep_in_progress = true;
-                  resweep_ignore_until = millis() + RESWEEP_IGNORE_MS;
+                  resweep_in_progress   = true;
+                  resweep_ignore_until  = millis() + RESWEEP_IGNORE_MS;
                   id(set_current).publish_state(0.0f);
                   id(output_control).turn_off();
-                  forced_cycle = true;
-                  forced_cycle_time = millis();
-                  best_power_so_far   = 0.0f;
-                  best_current_so_far = 0.0f;
-                  last_power          = 0.0f;
-                  mppt_state          = STATE_INIT_VOLTAGE;
-                  ESP_LOGI("MPPT", "Forced resweep initiated due to collapse in DONE");
+                  forced_cycle          = true;
+                  forced_cycle_time     = millis();
+                  best_power_so_far     = 0.0f;
+                  best_current_so_far   = 0.0f;
+                  last_power            = 0.0f;
+                  mppt_state            = STATE_INIT_VOLTAGE;
+                  ESP_LOGI("MPPT", 
+                           "Forced resweep initiated due to collapse in DONE");
                 }
               }
               break;
             }
 
-          } // end switch(mppt_state)
+          } // switch(mppt_state)
 
           // If we found a better peak in *any* state, record it
           if (p_meas > best_power_so_far) {
