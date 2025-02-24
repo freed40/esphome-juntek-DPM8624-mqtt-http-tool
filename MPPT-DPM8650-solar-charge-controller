@@ -1,6 +1,7 @@
 esphome:
-  name: dpm8650_controller
-  platform: ESP32
+  name: dpm8650_controlle
+
+esp32:
   board: esp32dev
 
 wifi:
@@ -437,12 +438,12 @@ interval:
           // TUNING PARAMETERS
           // -------------------------------------------------------------
           const float STEP_I_UP            = 0.1f;     // increments for SWEEP
-          const float BIG_DROP_THRESHOLD   = 3.0f;     // collapse if power delta < -5W
+          const float BIG_DROP_THRESHOLD   = 5.0f;     // collapse if power delta < -5W
           const float BELOW_BEST_OFFSET    = 0.3f;     // used in GO_BELOW_BEST
           const float MARGIN               = 0.3f;     // used in SHUTDOWN
           const float BEST_POWER_RATIO     = 0.70f;    // 70% => "good enough"
           const uint32_t DONE_HOLD_MS      = 100;     // hold in DONE for 100ms
-          const uint32_t RESWEEP_MS        = 60000;    // forced resweep every 60s
+          const uint32_t RESWEEP_MS        = 240000;    // forced resweep every 60s
           const uint32_t RESWEEP_IGNORE_MS = 5000;     // ignore collapse for 5s after forced resweep
           const uint32_t INIT_HOLD_MS      = 500;      // hold at 0 A after forced cycle
           const float FAKE_MAX_CURRENT     = 10.0f;    // hardware limit, if any
@@ -453,7 +454,7 @@ interval:
           const int   NOT_RISING_MAX_FAILS  = 5;
 
           // Short OFF time in ms
-          const uint32_t SHORT_OFF_MS = 450;
+          const uint32_t SHORT_OFF_MS = 350;
 
           // How much we subtract from best_current_so_far after the short off
           const float BEST_CURRENT_OFFSET = 0.3f;
