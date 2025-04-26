@@ -10,10 +10,10 @@ wifi:
 logger:
   level: INFO  # Set the global log level to INFO (or ERROR, or NONE for no logs)
 
-api:
+#api:
 
-web_server:
-  version: 3
+#web_server:
+#  version: 3
 
 ota:
   - platform: esphome
