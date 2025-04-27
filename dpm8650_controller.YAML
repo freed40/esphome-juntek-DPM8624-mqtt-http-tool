@@ -1,16 +1,26 @@
 esphome:
-  name: dpm8650_controller
-  platform: ESP32
+  name: dpm8650-controller
+
+esp32:
   board: esp32dev
+  framework:
+    type: arduino
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: !secret fake_ssid
+  password: !secret fake_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "dpm8650-controller"
+    password: "12345678"
 
 logger:
   level: INFO  # Set the global log level to INFO (or ERROR, or NONE for no logs)
 
-#api:
+api:
+ encryption:
+   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
 
 #web_server:
 #  version: 3
@@ -20,11 +30,15 @@ ota:
     password: "afafd3c4bba9467b8f842f8d622f1435"
 
 
-mqtt:
-   broker: !secret mqtt_host
-   username: !secret mqtt_username
-   password: !secret mqtt_password
-   id: mqtt_client
+#mqtt:
+#   broker: !secret mqtt_host
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+#   id: mqtt_client
+
+
+
+captive_portal:
 
 # UART configuration for RS485 communication
 uart:
@@ -93,34 +107,34 @@ text_sensor:
     update_interval: 1s  # Adjust based on your needs
     icon: "mdi:power"
 
-  - platform: mqtt_subscribe
-    name: "MQTT Voltage Command"
-    id: mqtt_voltage_command
-    topic: "home/commands/voltage"
-    internal: true  # This makes the sensor internal
-    on_value:
-      then:
-        - lambda: |-
-            float voltage = atof(x.c_str());  // Convert received string to float
-            if (voltage >= 0 && voltage <= 60) {  // Check bounds
-              id(set_voltage).publish_state(voltage);
-            } else {
-              ESP_LOGW("MQTT", "Received invalid voltage value: %.2f", voltage);
-            }
-  - platform: mqtt_subscribe
-    name: "MQTT Current Command"
-    id: mqtt_current_command
-    topic: "home/commands/current"
-    internal: true  # This makes the sensor internal
-    on_value:
-      then:
-        - lambda: |-
-            float current = atof(x.c_str());  // Convert received string to float
-            if (current >= 0 && current <= 50) {  // Check bounds
-              id(set_current).publish_state(current);
-            } else {
-              ESP_LOGW("MQTT", "Received invalid current value: %.2f", current);
-            }
+#  - platform: mqtt_subscribe
+#    name: "MQTT Voltage Command"
+#    id: mqtt_voltage_command
+#    topic: "home/commands/voltage"
+#    internal: true  # This makes the sensor internal
+#    on_value:
+#      then:
+#        - lambda: |-
+#            float voltage = atof(x.c_str());  // Convert received string to float
+#            if (voltage >= 0 && voltage <= 60) {  // Check bounds
+#              id(set_voltage).publish_state(voltage);
+#            } else {
+#              ESP_LOGW("MQTT", "Received invalid voltage value: %.2f", voltage);
+#            }
+#  - platform: mqtt_subscribe
+#    name: "MQTT Current Command"
+#    id: mqtt_current_command
+#    topic: "home/commands/current"
+#    internal: true  # This makes the sensor internal
+#    on_value:
+#      then:
+#        - lambda: |-
+#            float current = atof(x.c_str());  // Convert received string to float
+#            if (current >= 0 && current <= 50) {  // Check bounds
+#              id(set_current).publish_state(current);
+#            } else {
+#              ESP_LOGW("MQTT", "Received invalid current value: %.2f", current);
+#            }
 
 number:
   - platform: template
@@ -303,7 +317,6 @@ sensor:
     value_type: U_WORD
     unit_of_measurement: "A"
     accuracy_decimals: 0
-    retain: True
     filters:
       - multiply: 0.001 
 
@@ -328,5 +341,3 @@ switch:
           id(modbus1)->queue_command(disable_command);
       - delay: 100ms
     
-
-
