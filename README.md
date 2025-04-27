@@ -99,45 +99,45 @@ You can also control the DPM8650 via a built-in web tool which you can find on y
 ### MQTT Sensors and Controls
 
 - **MQTT Text Sensor 'CCCV Output State Label'**  
-  - State Topic: `dpm8650_controller/sensor/cccv_output_state_label/state`
+  - State Topic: `dpm8650-controller/sensor/cccv_output_state_label/state`
 
 - **MQTT Sensor 'MAX Output Voltage'**  
-  - State Topic: `dpm8650_controller/sensor/max_output_voltage/state`
+  - State Topic: `dpm8650-controller/sensor/max_output_voltage/state`
 
 - **MQTT Sensor 'MAX Output Current'**  
-  - State Topic: `dpm8650_controller/sensor/max_output_current/state`
+  - State Topic: `dpm8650-controller/sensor/max_output_current/state`
 
 - **MQTT Sensor 'Output Voltage'**  
-  - State Topic: `dpm8650_controller/sensor/output_voltage/state`
+  - State Topic: `dpm8650-controller/sensor/output_voltage/state`
 
 - **MQTT Sensor 'Output Current'**  
-  - State Topic: `dpm8650_controller/sensor/output_current/state`
+  - State Topic: `dpm8650-controller/sensor/output_current/state`
 
 - **MQTT Sensor 'Temperature'**  
-  - State Topic: `dpm8650_controller/sensor/temperature/state`
+  - State Topic: `dpm8650-controller/sensor/temperature/state`
 
 - **MQTT Number 'Set MAX Voltage'**  
-  - State Topic: `dpm8650_controller/number/set_max_voltage/state`
+  - State Topic: `dpm8650-controller/number/set_max_voltage/state`
 
 - **MQTT Number 'Set MAX Current'**  
-  - State Topic: `dpm8650_controller/number/set_max_current/state`
+  - State Topic: `dpm8650-controller/number/set_max_current/state`
 
 - **MQTT Switch 'Output Control'**  
-  - State Topic: `dpm8650_controller/switch/output_control/state`  
-  - Command Topic: `dpm8650_controller/switch/output_control/command`  
+  - State Topic: `dpm8650-controller/switch/output_control/state`  
+  - Command Topic: `dpm8650-controller/switch/output_control/command`  
 
   ![Screenshot 2024-11-20 110606](https://github.com/user-attachments/assets/c65462c0-e6ce-4368-a1a1-66056a36dfd6)
 
-  Message payload string `on` to `dpm8650_controller/switch/output_control/command` enables Converter output  
+  Message payload string `on` to `dpm8650-controller/switch/output_control/command` enables Converter output  
 
   ![Screenshot 2024-11-20 110631](https://github.com/user-attachments/assets/5a5aa78e-367e-4854-9ecf-8271a99b5652)
 
-  Message payload string `off` to `dpm8650_controller/switch/output_control/command` disables converter output
+  Message payload string `off` to `dpm8650-controller/switch/output_control/command` disables converter output
 
   
 
 - **MQTT Binary Sensor 'CCCV Output State'**  
-  - State Topic: `dpm8650_controller/binary_sensor/cccv_output_state/state`
+  - State Topic: `dpm8650-controller/binary_sensor/cccv_output_state/state`
 
 ### MQTT Subscribe Sensors
 
