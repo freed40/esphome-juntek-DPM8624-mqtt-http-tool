@@ -107,34 +107,34 @@ text_sensor:
     update_interval: 1s  # Adjust based on your needs
     icon: "mdi:power"
 
-#  - platform: mqtt_subscribe
-#    name: "MQTT Voltage Command"
-#    id: mqtt_voltage_command
-#    topic: "home/commands/voltage"
-#    internal: true  # This makes the sensor internal
-#    on_value:
-#      then:
-#        - lambda: |-
-#            float voltage = atof(x.c_str());  // Convert received string to float
-#            if (voltage >= 0 && voltage <= 60) {  // Check bounds
-#              id(set_voltage).publish_state(voltage);
-#            } else {
-#              ESP_LOGW("MQTT", "Received invalid voltage value: %.2f", voltage);
-#            }
-#  - platform: mqtt_subscribe
-#    name: "MQTT Current Command"
-#    id: mqtt_current_command
-#    topic: "home/commands/current"
-#    internal: true  # This makes the sensor internal
-#    on_value:
-#      then:
-#        - lambda: |-
-#            float current = atof(x.c_str());  // Convert received string to float
-#            if (current >= 0 && current <= 50) {  // Check bounds
-#              id(set_current).publish_state(current);
-#            } else {
-#              ESP_LOGW("MQTT", "Received invalid current value: %.2f", current);
-#            }
+  - platform: mqtt_subscribe
+    name: "MQTT Voltage Command"
+    id: mqtt_voltage_command
+    topic: "home/commands/voltage"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - lambda: |-
+            float voltage = atof(x.c_str());  // Convert received string to float
+            if (voltage >= 0 && voltage <= 60) {  // Check bounds
+              id(set_voltage).publish_state(voltage);
+            } else {
+              ESP_LOGW("MQTT", "Received invalid voltage value: %.2f", voltage);
+            }
+  - platform: mqtt_subscribe
+    name: "MQTT Current Command"
+    id: mqtt_current_command
+    topic: "home/commands/current"
+    internal: true  # This makes the sensor internal
+    on_value:
+      then:
+        - lambda: |-
+            float current = atof(x.c_str());  // Convert received string to float
+            if (current >= 0 && current <= 50) {  // Check bounds
+              id(set_current).publish_state(current);
+            } else {
+              ESP_LOGW("MQTT", "Received invalid current value: %.2f", current);
+            }
 
 number:
   - platform: template
