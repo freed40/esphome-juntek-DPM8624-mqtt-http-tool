@@ -18,9 +18,9 @@ wifi:
 logger:
   level: INFO  # Set the global log level to INFO (or ERROR, or NONE for no logs)
 
-#api:
-# encryption:
-#   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
+api:
+ encryption:
+   key: "Np7EDGpTJZPZphuc+WA2vIt34DHI7hpXM9gPVnHOICg="
 
 web_server:
   version: 3
@@ -30,11 +30,11 @@ ota:
     password: "afafd3c4bba9467b8f842f8d622f1435"
 
 
-#mqtt:
-#   broker: !secret mqtt_host
-#   username: !secret mqtt_username
-#   password: !secret mqtt_password
-#   id: mqtt_client
+mqtt:
+   broker: !secret mqtt_host
+   username: !secret mqtt_username
+   password: !secret mqtt_password
+   id: mqtt_client
 
 
 
