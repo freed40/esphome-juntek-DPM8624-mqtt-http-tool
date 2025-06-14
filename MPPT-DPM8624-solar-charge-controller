@@ -1,8 +1,10 @@
 esphome:
-  name: dpm8650_controlle
+  name: dpm8624_controlle
 
 esp32:
   board: esp32dev
+esp8266:
+  board: esp8266dev
 
 wifi:
   ssid: !secret wifi_ssid
