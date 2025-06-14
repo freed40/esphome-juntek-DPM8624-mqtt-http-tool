@@ -1,8 +1,12 @@
 esphome:
-  name: dpm8650-controller
+  name: dpm8624-controller
 
 esp32:
   board: esp32dev
+  framework:
+    type: arduino
+esp32:
+  board: esp8266dev
   framework:
     type: arduino
 
