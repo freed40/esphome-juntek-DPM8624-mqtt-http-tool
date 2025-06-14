@@ -1,8 +1,8 @@
-# ESPHome Juntek DPM8650 MQTT & HTTP Tool
+# ESPHome Juntek DPM8624 MQTT & HTTP Tool
 
-Control your **[Juntek DPM8650 50A Buck Converter](./JT-DPM8650_Datasheet-EN_2024-02-14.pdf)** using its RS485 Modbus interface. This setup integrates seamlessly with **Home Assistant**, **Node-RED**, or a simple web control interface using [ESPHome YAML configuration](./dpm8650_controller.YAML)
+Control your **[Juntek DPM8624 24A Buck Converter](./JT-DPM8624_Datasheet-EN_2024-02-14.pdf)** using its RS485 Modbus interface. This setup integrates seamlessly with **Home Assistant**, **Node-RED**, or a simple web control interface using [ESPHome YAML configuration](./dpm8624_controller.YAML)
 
-**[New: Use your DPM8650 as a powerful MPPT Solar Charge controller](https://github.com/mjpalmowski/esphome-juntek-DPM8650-mqtt-http-tool/blob/main/MPPT-DPM8650-solar-charge-controller)**
+**[New: Use your DPM8624 as a powerful MPPT Solar Charge controller](https://github.com/mjpalmowski/esphome-juntek-DPM8624-mqtt-http-tool/blob/main/MPPT-DPM8624-solar-charge-controller)**
 
 # ESP32 MQTT dongle
 
@@ -35,14 +35,14 @@ Ensure the TX and RX pins are connected as described:
 <img width="190" alt="Screenshot 2024-11-19 125220" src="https://github.com/user-attachments/assets/dd39aa32-035a-4258-9c77-b1909ab9c67b">
 
 
-For detailed ESPHome configuration, refer to the [DPM8650 Controller YAML](./dpm8650_controller.YAML).
+For detailed ESPHome configuration, refer to the [DPM8624 Controller YAML](./dpm8624_controller.YAML).
 
 
-## DPM8650 Configuration
+## DPM8624 Configuration
 
-To set up your Juntek DPM8650, follow these steps:
+To set up your Juntek DPM8624, follow these steps:
 
-1. **Long-press the SET button** on your DPM8650 to enter the configuration menu.
+1. **Long-press the SET button** on your DPM8624 to enter the configuration menu.
 2. Adjust the following settings:
 
    - **Communication Port (5-CS)**: Set this to `1` to enable RS485 Modbus communication.
@@ -61,7 +61,7 @@ To set up your Juntek DPM8650, follow these steps:
 
 ## Interface Options
 
-Depending on your use case, you can enable different interfaces in the [DPM8650 Controller YAML](./dpm8650_controller.YAML).
+Depending on your use case, you can enable different interfaces in the [DPM8624 Controller YAML](./dpm8624_controller.YAML).
 
 1. **Home Assistant API**:
    - Keep the `api:` block if you're using Home Assistant integration.
@@ -70,7 +70,7 @@ Depending on your use case, you can enable different interfaces in the [DPM8650 
    - Retain the `mqtt:` block if you're using MQTT for integration with Node-RED or other MQTT clients.
 
 3. **Web Interface**:
-   - Use the `web_server:` block if you prefer controlling the DPM8650 via a simple web interface.
+   - Use the `web_server:` block if you prefer controlling the DPM8624 via a simple web interface.
   
 
 
@@ -78,7 +78,7 @@ Depending on your use case, you can enable different interfaces in the [DPM8650 
 
 ## Home Assistant Integration
 
-Here's a screenshot of how the DPM8650 sensors and controls appear in Home Assistant:
+Here's a screenshot of how the DPM8624 sensors and controls appear in Home Assistant:
 
 ![Home Assistant Screenshot 1](https://github.com/user-attachments/assets/b4653e18-b158-4e96-b338-9c1baadd233c)
 
@@ -88,7 +88,7 @@ Here's a screenshot of how the DPM8650 sensors and controls appear in Home Assis
 
 ## Web Control Interface
 
-You can also control the DPM8650 via a built-in web tool which you can find on your network at http://dpm8650_controller.local/
+You can also control the DPM8624 via a built-in web tool which you can find on your network at http://dpm8624_controller.local/
 
 ![Screenshot 2025-01-20 152345](https://github.com/user-attachments/assets/6ed36754-8280-4219-99bd-c5b63c4d871b)
 
@@ -99,45 +99,45 @@ You can also control the DPM8650 via a built-in web tool which you can find on y
 ### MQTT Sensors and Controls
 
 - **MQTT Text Sensor 'CCCV Output State Label'**  
-  - State Topic: `dpm8650-controller/sensor/cccv_output_state_label/state`
+  - State Topic: `dpm8624-controller/sensor/cccv_output_state_label/state`
 
 - **MQTT Sensor 'MAX Output Voltage'**  
-  - State Topic: `dpm8650-controller/sensor/max_output_voltage/state`
+  - State Topic: `dpm8624-controller/sensor/max_output_voltage/state`
 
 - **MQTT Sensor 'MAX Output Current'**  
-  - State Topic: `dpm8650-controller/sensor/max_output_current/state`
+  - State Topic: `dpm8624-controller/sensor/max_output_current/state`
 
 - **MQTT Sensor 'Output Voltage'**  
-  - State Topic: `dpm8650-controller/sensor/output_voltage/state`
+  - State Topic: `dpm8624-controller/sensor/output_voltage/state`
 
 - **MQTT Sensor 'Output Current'**  
-  - State Topic: `dpm8650-controller/sensor/output_current/state`
+  - State Topic: `dpm8624-controller/sensor/output_current/state`
 
 - **MQTT Sensor 'Temperature'**  
-  - State Topic: `dpm8650-controller/sensor/temperature/state`
+  - State Topic: `dpm8624-controller/sensor/temperature/state`
 
 - **MQTT Number 'Set MAX Voltage'**  
-  - State Topic: `dpm8650-controller/number/set_max_voltage/state`
+  - State Topic: `dpm8624-controller/number/set_max_voltage/state`
 
 - **MQTT Number 'Set MAX Current'**  
-  - State Topic: `dpm8650-controller/number/set_max_current/state`
+  - State Topic: `dpm8624-controller/number/set_max_current/state`
 
 - **MQTT Switch 'Output Control'**  
-  - State Topic: `dpm8650-controller/switch/output_control/state`  
-  - Command Topic: `dpm8650-controller/switch/output_control/command`  
+  - State Topic: `dpm8624-controller/switch/output_control/state`  
+  - Command Topic: `dpm8624-controller/switch/output_control/command`  
 
   ![Screenshot 2024-11-20 110606](https://github.com/user-attachments/assets/c65462c0-e6ce-4368-a1a1-66056a36dfd6)
 
-  Message payload string `on` to `dpm8650-controller/switch/output_control/command` enables Converter output  
+  Message payload string `on` to `dpm8624-controller/switch/output_control/command` enables Converter output  
 
   ![Screenshot 2024-11-20 110631](https://github.com/user-attachments/assets/5a5aa78e-367e-4854-9ecf-8271a99b5652)
 
-  Message payload string `off` to `dpm8650-controller/switch/output_control/command` disables converter output
+  Message payload string `off` to `dpm8624-controller/switch/output_control/command` disables converter output
 
   
 
 - **MQTT Binary Sensor 'CCCV Output State'**  
-  - State Topic: `dpm8650-controller/binary_sensor/cccv_output_state/state`
+  - State Topic: `dpm8624-controller/binary_sensor/cccv_output_state/state`
 
 ### MQTT Subscribe Sensors
 
